@@ -1,0 +1,18 @@
+<odoo>
+  <record id="view_order_form_certify" model="ir.ui.view">
+    <field name="name">sale.order.form.certify</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form" />
+    <field name="arch" type="xml">
+      <xpath expr="//header/button[1]" position="before">
+        <button
+                    name="action_certify"
+                    type="object"
+                    string="Certificate"
+                    class="oe_highlight"
+                    invisible="state != 'sale'"
+                />
+      </xpath>
+    </field>
+  </record>
+</odoo>
