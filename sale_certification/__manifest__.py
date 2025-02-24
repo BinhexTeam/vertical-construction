@@ -7,12 +7,15 @@
     "website": "https://github.com/OCA/vertical-construction",
     "category": "Sales",
     "depends": [
-        "sale",
+        "sale_management",
+        "account",
     ],
     "data": [
         "security/ir.model.access.csv",
+        "views/view_order_certifications.xml",
         "views/view_order_form_certify.xml",
-        "wizard/sale_order_certify.xml",
+        "wizard/certification_wizard_view.xml",
+        "views/order_certifications_menu.xml",
     ],
     "installable": True,
     "application": False,

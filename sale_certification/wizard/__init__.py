@@ -1,1 +1,1 @@
-from . import sale_order_certify
+from . import certification_wizard

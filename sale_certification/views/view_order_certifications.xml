@@ -1,0 +1,59 @@
+<odoo>
+    <!-- Action for Certification -->
+    <record id="order_certification_action" model="ir.actions.act_window">
+        <field name="name">Certification</field>
+        <field name="res_model">order.certification</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <!--Certifications Tree View-->
+    <record id="view_order_certifications_tree" model="ir.ui.view">
+        <field name="name">order.certification.tree</field>
+        <field name="model">order.certification</field>
+        <field name="arch" type="xml">
+            <tree create="False">
+                <field name="order_id" />
+                <field name="name" />
+                <field name="state" />
+                <field name="certification_date" />
+            </tree>
+        </field>
+    </record>
+
+    <!--Certifications Form View-->
+    <record id="view_order_certifications_form" model="ir.ui.view">
+        <field name="name">order.certification.form</field>
+        <field name="model">order.certification</field>
+        <field name="arch" type="xml">
+            <form create="False">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+
+                    <separator/>
+
+                    <group>
+                        <field name="state" />
+                        <field name="certification_date" readonly="True" />
+                        <field name="total_certified" readonly="True" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- Root menu -->
+    <menuitem id="order_certification_root_menu" 
+        name="Certifications"
+    />
+
+    <!-- Order Certification menu -->
+    <menuitem id="order_certification_menu"
+        name="Certifications"
+        parent="order_certification_root_menu"
+    />
+</odoo>
