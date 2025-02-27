@@ -23,6 +23,7 @@ class CertificationLine(models.Model):
         ("note", "Note"),
         ("line", "Line"),
     ], string="Type", default="line")
+    section = fields.Char(string="Section")
     relative_percentage = fields.Float(
         string="Relative Percentage", 
         compute="_compute_relative_percentage", 

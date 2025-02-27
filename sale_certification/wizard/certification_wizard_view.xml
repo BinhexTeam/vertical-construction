@@ -12,7 +12,8 @@
                         name="percentage"
                         invisible="certification_type != 'percentage'"
                     />
-                    <field name="sale_order_line_ids" widget="many2many_checkboxes" />
+                    <field name="chapter_ids" widget="many2many_checkboxes" invisible="certification_type != 'chapters'"/>
+                    <field name="sale_order_line_ids" widget="many2many_checkboxes" invisible="certification_type == 'chapters'" />
                 </group>
                 <footer>
                     <button

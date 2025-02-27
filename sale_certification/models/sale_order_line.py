@@ -10,7 +10,9 @@ class SaleOrderLine(models.Model):
         store=True,
     )
     is_certified_chapter = fields.Boolean(
-        string="Chapter Certified", compute="_compute_is_certified_chapter", store=True
+        string="Certified Chapter",
+        compute="_compute_is_certified_chapter",
+        store=True,
     )
     certifiable_quantity = fields.Float(
         string="Certifiable Quantity", compute="_compute_certifiable_quantity"
@@ -64,10 +66,3 @@ class SaleOrderLine(models.Model):
                 )
             else:
                 line.is_certified_chapter = False
-
-    def prepare_certification_values(self):
-        return {
-            "service": self.name,
-            "quantity": self.certifiable_quantity,
-            "type": "line",
-        }

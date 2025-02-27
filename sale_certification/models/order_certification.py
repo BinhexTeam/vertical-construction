@@ -41,6 +41,27 @@ class OrderCertification(models.Model):
 
     @api.ondelete(at_uninstall=False)
     def _unlink_and_uncertify_lines(self):
-        for line in self.certification_line_ids:
-            line.sale_line_id.is_certified = False
-            line.sale_line_id.is_certified_chapter = False
+        CertificationLine = self.env['certification.line']
+        for cert in self:
+            for line in cert.certification_line_ids:
+                sale_line = line.sale_line_id
+                if line.certify_type == "section" and line.section:
+                    other_chapter_lines = CertificationLine.search([
+                        ('sale_line_id', '=', sale_line.id),
+                        ('certification_id', 'not in', self.ids),
+                        ('certify_type', '=', 'section'),
+                        ('section', '!=', False)
+                    ], limit=1)
+                    if not other_chapter_lines:
+                        sale_line.is_certified_chapter = False
+                else:
+                    other_lines = CertificationLine.search([
+                        ('sale_line_id', '=', sale_line.id),
+                        ('certification_id', 'not in', self.ids),
+                        ('certify_type', '!=', 'section'),
+                    ], limit=1)
+                    if not other_lines:
+                        sale_line.is_certified = False
+
+            
+            

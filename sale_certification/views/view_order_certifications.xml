@@ -44,10 +44,9 @@
                             readonly="True"
                         >
                             <tree string="Certification Lines">
-                                <field name="sale_line_id" />
+                                <field name="section" />
                                 <field name="products" />
                                 <field name="quantity" />
-                                <field name="certify_type" />
                                 <field name="relative_percentage" />
                             </tree>
                         </field>
@@ -64,10 +63,9 @@
         <field name="model">certification.line</field>
         <field name="arch" type="xml">
             <tree string="Certification Lines">
-                <field name="sale_line_id" />
+                <field name="section" />
                 <field name="products" />
                 <field name="quantity" />
-                <field name="certify_type" />
                 <field name="relative_percentage" />
             </tree>
         </field>

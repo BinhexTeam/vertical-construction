@@ -1,4 +1,4 @@
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class CertificationWizard(models.TransientModel):
@@ -24,92 +24,86 @@ class CertificationWizard(models.TransientModel):
         default="regular",
         required=True,
     )
+    percentage = fields.Float(string="Percentage", default=0.0)
     sale_order_line_ids = fields.Many2many(
         "sale.order.line",
+        "cert_wizard_sale_order_line_rel",
+        "wizard_id", "line_id",
         string="Order Lines",
-        domain="""
-            [
-                ('order_id', '=', order_id),
-                ('is_certified', '=', False),
-                ('is_certified_chapter', '=', False),
-                ('display_type', '=', certification_type == 'chapters' and 'line_section' or False),
-                ('display_type', '!=', certification_type in ['percentage', 'regular'] and 'line_section' or False)
-            ]
-        """,
+        domain=""" [
+            ('order_id', '=', order_id), 
+            ('is_certified', '=', False), 
+            ('display_type', '=', False)
+        ]
+        """
     )
-    percentage = fields.Float(string="Percentage", default=0.0)
-
-    # TODO Refactor this method and fix is_certified_chapter
+    chapter_ids = fields.Many2many(
+        "sale.order.line",
+        "cert_wizard_chapter_ids_rel",
+        "wizard_id", "line_id",
+        string="Chapters",
+        domain="""[
+            ('order_id', '=', order_id),
+            ('is_certified_chapter', '=', False),
+            ('display_type', '=', 'line_section')
+        ]
+        """
+    )
 
     def action_create_certification(self):
         self.ensure_one()
 
-        certification = self.env["order.certification"].create(
-            {
-                "order_id": self.order_id.id,
-                "name": self.name,
-                "sequence": len(self.order_id.certification_ids) + 1,
-            }
-        )
+        certification = self.env["order.certification"].create({
+            "order_id": self.order_id.id,
+            "name": self.name,
+            "sequence": len(self.order_id.certification_ids) + 1,
+        })
 
-        for line in self.sale_order_line_ids:
-            if line.display_type == "line_section":
-                lines = self.env["sale.order.line"].search(
-                    [
-                        ("order_id", "=", self.order_id.id),
-                        ("sequence", ">", line.sequence),
-                    ]
-                )
+        action = self.env["ir.actions.actions"]._for_xml_id("sale_certification.order_certification_action")
+        form_view = self.env.ref("sale_certification.view_order_certifications_form")
+        action["views"] = [(form_view.id, "form")]
+        action["res_id"] = certification.id
 
-                self._certify_section_lines(lines, certification)
-
-                if line == self.sale_order_line_ids[-1]:
-                    break
-
-            elif line.display_type == "line_note":
-                continue
-            else:
-                self.env["certification.line"].create(
-                    {
-                        "certification_id": certification.id,
-                        "sale_line_id": line.id,
-                        "products": line.product_id.name
-                        if line.product_id
-                        else line.name,
-                        "quantity": line.certifiable_quantity,
-                        "certify_type": "line",
-                    }
-                )
-
+        if self.certification_type == "chapters":
+            selected_chapters = self.chapter_ids.sorted(key=lambda r: r.sequence)
+            for chapter in selected_chapters:
+                chapter.is_certified_chapter = True
+                self._certify_lines_for_chapter(certification, chapter)
+        else:
+            for line in self.sale_order_line_ids:
                 line.is_certified = True
+                self.env["certification.line"].create({
+                    "certification_id": certification.id,
+                    "sale_line_id": line.id,
+                    "products": line.product_id.name if line.product_id else line.name,
+                    "quantity": line.certifiable_quantity,
+                    "certify_type": "line",
+                    "section": "",
+                })
+               
 
-        return {"type": "ir.actions.act_window_close"}
+        return action
 
-    def _certify_section_lines(self, lines, certification):
-        for line in lines:
-            if line.display_type == "line_section":
-                # self.env["certification.line"].create({
-                #     "certification_id": certification.id,
-                #     "sale_line_id": line.id,
-                #     "products": line.name,
-                #     "quantity": line.certifiable_quantity,
-                #     "certify_type": "section",
-                # })
+    def _certify_lines_for_chapter(self, certification, chapter):
+        sale_lines = self.order_id.order_line.sorted(key=lambda l: l.sequence)
+        for line in sale_lines:
+            if line.sequence <= chapter.sequence:
+                continue
 
-                line.is_certified_chapter = True  # When line is not created, fix to turn it false when deleting certification
+            if line.display_type == "line_section" and line not in self.chapter_ids:
                 break
 
-            if line.display_type is False:
-                self.env["certification.line"].create(
-                    {
-                        "certification_id": certification.id,
-                        "sale_line_id": line.id,
-                        "products": line.product_id.name
-                        if line.product_id
-                        else line.name,
-                        "quantity": line.certifiable_quantity,
-                        "certify_type": "line",
-                    }
-                )
+            if line.display_type == "line_note":
+                continue
 
-                line.is_certified = True
+            self.env["certification.line"].create({
+                "certification_id": certification.id,
+                "sale_line_id": line.id,
+                "products": line.product_id.name if line.product_id else line.name,
+                "quantity": line.certifiable_quantity,
+                "certify_type": "line",
+                "section": chapter.name,
+            })
+
+            line.is_certified = True
+

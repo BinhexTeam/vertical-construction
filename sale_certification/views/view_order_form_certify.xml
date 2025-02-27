@@ -6,12 +6,15 @@
     <field name="arch" type="xml">
       <xpath expr="//header/button[1]" position="before">
         <button
-                    name="open_certify_wizard"
-                    type="object"
-                    string="Certificate"
-                    class="oe_highlight"
-                    invisible="state != 'sale'"
-                />
+          name="open_certify_wizard"
+          type="object"
+          string="Certificate"
+          class="oe_highlight"
+          invisible="state != 'sale'"
+        />
+      </xpath>
+      <xpath expr="//field[@name='partner_id']" position="after">
+         <field name="certified_percentage" readonly="1" widget="float" options="{'precision': 2}"/>
       </xpath>
     </field>
   </record>
