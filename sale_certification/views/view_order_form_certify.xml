@@ -14,7 +14,10 @@
         />
       </xpath>
       <xpath expr="//field[@name='partner_id']" position="after">
-         <field name="certified_percentage" readonly="1" widget="float" options="{'precision': 2}"/>
+         <field name="certified_info" readonly="True" />
+      </xpath>
+      <xpath expr="//field[@name='partner_id']" position="after">
+        <field name="certifications_count" readonly="True"/>
       </xpath>
     </field>
   </record>

@@ -65,13 +65,16 @@ class CertificationWizard(models.TransientModel):
         action["res_id"] = certification.id
 
         if self.certification_type == "chapters":
+            certification.write({'chapter_cert_ids': [(6, 0, self.chapter_ids.ids)]})
             selected_chapters = self.chapter_ids.sorted(key=lambda r: r.sequence)
+
             for chapter in selected_chapters:
                 chapter.is_certified_chapter = True
                 self._certify_lines_for_chapter(certification, chapter)
         else:
             for line in self.sale_order_line_ids:
                 line.is_certified = True
+                
                 self.env["certification.line"].create({
                     "certification_id": certification.id,
                     "sale_line_id": line.id,
@@ -81,7 +84,6 @@ class CertificationWizard(models.TransientModel):
                     "section": "",
                 })
                
-
         return action
 
     def _certify_lines_for_chapter(self, certification, chapter):
@@ -96,14 +98,15 @@ class CertificationWizard(models.TransientModel):
             if line.display_type == "line_note":
                 continue
 
-            self.env["certification.line"].create({
-                "certification_id": certification.id,
-                "sale_line_id": line.id,
-                "products": line.product_id.name if line.product_id else line.name,
-                "quantity": line.certifiable_quantity,
-                "certify_type": "line",
-                "section": chapter.name,
-            })
+            if line.display_type is False:
+                self.env["certification.line"].create({
+                    "certification_id": certification.id,
+                    "sale_line_id": line.id,
+                    "products": line.product_id.name if line.product_id else line.name,
+                    "quantity": line.certifiable_quantity,
+                    "certify_type": "line",
+                    "section": chapter.name,
+                })
 
-            line.is_certified = True
+                line.is_certified = True
 

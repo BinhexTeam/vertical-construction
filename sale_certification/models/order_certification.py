@@ -9,13 +9,13 @@ class OrderCertification(models.Model):
     order_id = fields.Many2one(
         "sale.order", string="Sale Order", required=True, ondelete="cascade"
     )
-    name = fields.Char(
-        string="Certification",
-        required=True,
-    )
+    name = fields.Char(string="Certification", required=True)
     sequence = fields.Integer(string="Sequence", default=0)
     certification_line_ids = fields.One2many(
         "certification.line", "certification_id", string="Lines"
+    )
+    chapter_cert_ids = fields.Many2many(
+        "sale.order.line", string="Certified Chapters"
     )
     certification_date = fields.Date(string="Date", default=fields.Date.context_today)
     total_certified = fields.Float(
@@ -45,13 +45,14 @@ class OrderCertification(models.Model):
         for cert in self:
             for line in cert.certification_line_ids:
                 sale_line = line.sale_line_id
-                if line.certify_type == "section" and line.section:
+
+                if line.certify_type == "section":
                     other_chapter_lines = CertificationLine.search([
                         ('sale_line_id', '=', sale_line.id),
                         ('certification_id', 'not in', self.ids),
                         ('certify_type', '=', 'section'),
-                        ('section', '!=', False)
                     ], limit=1)
+                    
                     if not other_chapter_lines:
                         sale_line.is_certified_chapter = False
                 else:
@@ -60,8 +61,20 @@ class OrderCertification(models.Model):
                         ('certification_id', 'not in', self.ids),
                         ('certify_type', '!=', 'section'),
                     ], limit=1)
+
                     if not other_lines:
                         sale_line.is_certified = False
+
+            for chapter in cert.chapter_cert_ids:
+                other_cert = self.search([
+                    ('id', 'not in', cert.ids),
+                    ('chapter_cert_ids', 'in', chapter.id)
+                ], limit=1)
+
+                if not other_cert:
+                    chapter.is_certified_chapter = False
+
+
 
             
             

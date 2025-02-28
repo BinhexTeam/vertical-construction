@@ -10,12 +10,18 @@ class SaleOrder(models.Model):
     )
     certifications_count = fields.Integer(
         string="Certifications Count", 
-        compute="_compute_certifications_count"
+        compute="_compute_certifications_count",
+        store=True
     )
     total_certified = fields.Float(
         string="Total Certified", 
         compute="_compute_total_certified",
         help="Total of the certifications issued in the order"
+    )
+    certified_info = fields.Char(
+        string="Certified Quantity",
+        compute="_compute_certified_info",
+        store=True,
     )
     certified_percentage = fields.Float(
         string="Certified Lines (%)",
@@ -35,6 +41,14 @@ class SaleOrder(models.Model):
             for cert in order.certification_ids:
                 total += cert.total_certified
             order.total_certified = total
+
+    @api.depends("order_line.product_uom_qty", "certification_ids.certification_line_ids.quantity")
+    def _compute_certified_info(self):
+        for order in self:
+            product_lines = order.order_line.filtered(lambda l: not l.display_type)
+            total_qty = sum(product_lines.mapped('product_uom_qty'))
+            certified_qty = order.total_certified
+            order.certified_info = f"{certified_qty}/{total_qty}"
 
     @api.depends("order_line.is_certified")
     def _compute_certified_percentage(self):
